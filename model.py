@@ -2,6 +2,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
+import pdb
 
 
 class SkipGramModel(nn.Module):
@@ -34,10 +35,21 @@ class SkipGramModel(nn.Module):
         self.v_embeddings = nn.Embedding(emb_size, emb_dimension, sparse=True)
         self.init_emb()
 
+        # pdb.set_trace()
+        # (Pdb) a
+        # self = SkipGramModel(
+        # (u_embeddings): Embedding(8934, 100, sparse=True)
+        # (v_embeddings): Embedding(8934, 100, sparse=True)
+        # )
+        # emb_size = 8934
+        # emb_dimension = 100
+
+
     def init_emb(self):
         """Initialize embedding weight like word2vec.
 
-        The u_embedding is a uniform distribution in [-0.5/em_size, 0.5/emb_size], and the elements of v_embedding are zeroes.
+        The u_embedding is a uniform distribution in [-0.5/em_size, 0.5/emb_size], 
+        and the elements of v_embedding are zeroes.
 
         Returns:
             None
@@ -60,13 +72,37 @@ class SkipGramModel(nn.Module):
         Returns:
             Loss of this process, a pytorch variable.
         """
+        # pdb.set_trace()
+        # (Pdb) pos_u.size(), pos_v.size(), neg_v.size()
+        # (torch.Size([50]), torch.Size([50]), torch.Size([50, 5]))
+
         emb_u = self.u_embeddings(pos_u)
         emb_v = self.v_embeddings(pos_v)
+        # (Pdb) emb_u.size()
+        # torch.Size([50, 100])
+        # (Pdb) emb_v.size()
+        # torch.Size([50, 100])
+
         score = torch.mul(emb_u, emb_v).squeeze()
         score = torch.sum(score, dim=1)
+        # pdb.set_trace()
+        # torch.Size([50, 100])
+
         score = F.logsigmoid(score)
+        # pdb.set_trace()
+        # (Pdb) score.size()
+        # torch.Size([50])
+
         neg_emb_v = self.v_embeddings(neg_v)
+        # pdb.set_trace()
+        # (Pdb) neg_emb_v.size()
+        # torch.Size([50, 5, 100])
+
         neg_score = torch.bmm(neg_emb_v, emb_u.unsqueeze(2)).squeeze()
+        # pdb.set_trace()
+        # (Pdb) neg_score.size()
+        # torch.Size([50, 5])
+
         neg_score = F.logsigmoid(-1 * neg_score)
         return -1 * (torch.sum(score)+torch.sum(neg_score))
 

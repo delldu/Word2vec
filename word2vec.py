@@ -8,6 +8,7 @@ import torch.optim as optim
 from tqdm import tqdm
 import sys
 
+import pdb
 
 class Word2Vec:
     def __init__(self,
@@ -16,7 +17,7 @@ class Word2Vec:
                  emb_dimension=100,
                  batch_size=50,
                  window_size=5,
-                 iteration=1,
+                 iteration=10,
                  initial_lr=0.025,
                  min_count=5):
         """Initilize class parameters.
@@ -49,6 +50,18 @@ class Word2Vec:
         self.optimizer = optim.SGD(
             self.skip_gram_model.parameters(), lr=self.initial_lr)
 
+        # pdb.set_trace()
+        # (Pdb) a
+        # input_file_name = 'zhihu.txt'
+        # output_file_name = 'word_embedding.txt'
+        # emb_dimension = 100
+        # batch_size = 50
+        # window_size = 5
+        # iteration = 10
+        # initial_lr = 0.025
+        # min_count = 5
+
+
     def train(self):
         """Multiple training.
 
@@ -67,6 +80,10 @@ class Word2Vec:
             pos_u = [pair[0] for pair in pos_pairs]
             pos_v = [pair[1] for pair in pos_pairs]
 
+            # pdb.set_trace()
+            # Pdb) len(pos_pairs), pos_pairs
+            # (50, [(0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (1, 2), (1, 3), (1, 4), (1, 5), (2, 0), (2, 1), (2, 3)
+
             pos_u = Variable(torch.LongTensor(pos_u))
             pos_v = Variable(torch.LongTensor(pos_v))
             neg_v = Variable(torch.LongTensor(neg_v))
@@ -81,7 +98,7 @@ class Word2Vec:
             self.optimizer.step()
 
             process_bar.set_description("Loss: %0.8f, lr: %0.6f" %
-                                        (loss.data[0],
+                                        (loss.item(),
                                          self.optimizer.param_groups[0]['lr']))
             if i * self.batch_size % 100000 == 0:
                 lr = self.initial_lr * (1.0 - 1.0 * i / batch_count)

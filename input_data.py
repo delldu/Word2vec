@@ -2,6 +2,7 @@ import numpy
 from collections import deque
 numpy.random.seed(12345)
 
+import pdb
 
 class InputData:
     """Store data for word2vec, such as word map, sampling table and so on.
@@ -50,16 +51,30 @@ class InputData:
             wid += 1
         self.word_count = len(self.word2id)
 
+        # pdb.set_trace()
+        # (Pdb) pp self.word_count
+        # 8934
+
     def init_sample_table(self):
         self.sample_table = []
         sample_table_size = 1e8
         pow_frequency = numpy.array(list(self.word_frequency.values()))**0.75
         words_pow = sum(pow_frequency)
         ratio = pow_frequency / words_pow
+        # (Pdb) ratio.shape,ratio.sum()
+        # ((8934,), 0.999999999999991)
         count = numpy.round(ratio * sample_table_size)
+        # (Pdb) count
+        # array([642837.,  15567.,  18796., ...,   3312.,   2328.,   2328.])
         for wid, c in enumerate(count):
             self.sample_table += [wid] * int(c)
         self.sample_table = numpy.array(self.sample_table)
+
+        # pdb.set_trace()
+        # (Pdb) self.sample_table
+        # array([   0,    0,    0, ..., 8933, 8933, 8933])
+        # (Pdb) self.sample_table.shape
+        # (100000559,)
 
     # @profile
     def get_batch_pairs(self, batch_size, window_size):
@@ -85,15 +100,37 @@ class InputData:
         batch_pairs = []
         for _ in range(batch_size):
             batch_pairs.append(self.word_pair_catch.popleft())
+
+        # pdb.set_trace()
+        # (Pdb) len(batch_pairs), batch_pairs
+        # (50, [(0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (1, 2), (1, 3), (1, 4), (1, 5), (2, 0), (2, 1), (2, 3),
+        # (2, 4), (2, 5), (2, 5), (3, 0), (3, 1), (3, 2), (3, 4), (3, 5), (3, 5), (3, 6), (4, 0), (4, 1),
+        # (4, 2), (4, 3), (4, 5), (4, 5), (4, 6), (4, 7), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5),
+        # (5, 6), (5, 7), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 5), (5, 7), (6, 2), (6, 3), (6, 4),
+        # (6, 5), (6, 5)])
+
         return batch_pairs
 
     # @profile
     def get_neg_v_neg_sampling(self, pos_word_pair, count):
         neg_v = numpy.random.choice(
             self.sample_table, size=(len(pos_word_pair), count)).tolist()
+
+        # pdb.set_trace()
+        # (Pdb) a
+        # self = <input_data.InputData object at 0x7f951c6aa0b8>
+        # batch_size = 50
+        # window_size = 5
+        # (Pdb) type(neg_v), len(neg_v)
+        # (<class 'list'>, 50)
+
         return neg_v
 
     def evaluate_pair_count(self, window_size):
+        # pdb.set_trace()
+        # (Pdb) self.sentence_length * (2 * window_size - 1) 
+        # - (self.sentence_count - 1) * (1 + window_size) * window_size
+        # 4264098
         return self.sentence_length * (2 * window_size - 1) - (
             self.sentence_count - 1) * (1 + window_size) * window_size
 
